@@ -1,5 +1,7 @@
 package com.sample
 
+import org.apache.hadoop.io.IntWritable
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{HashPartitioner, RangePartitioner, SparkConf, SparkContext}
 
@@ -14,24 +16,30 @@ object AppSpark {
     conf.setMaster("local[*]")
     val sc = new SparkContext(conf)
 
-    //testCombineByKey(sc)
+//    testCombineByKey(sc)
+//
+//    testDegreeOfParallelism(sc)
+//
+//    testUsingGroupByKey(sc)
+//    testJoins(sc)
+//    test(sc)
+//
+//    val pageRankFile = "C://spark/data/mllib/pagerank_data.txt"
+//
+//    //computePageRank(pageRankFile, sc)
+//    testAverage(sc)
 
-    //testDegreeOfParalellism(sc)
+    //saveSequenceFile(sc)
 
-    //testUsingGroupByKey(sc)
-    //testJoins(sc)
-    //test(sc)
-
-    val pageRankFile = "C://spark/data/mllib/pagerank_data.txt"
-
-    //computePageRank(pageRankFile, sc)
-    testAverage(sc)
+    loadcsvFile(sc)
   }
 
 
   private def test(sc: SparkContext): Unit = {
 
-    val input = sc.textFile("c://spark//readme.md")
+    val input = sc.textFile("//usr//local//spark//readme.md")
+
+//    val input = sc.textFile("c://spark//readme.md")
     // Split it up into words.
     val words = input.flatMap(line => line.split(" "))
     // Transform into pairs and count.
@@ -66,6 +74,7 @@ object AppSpark {
     result.persist(StorageLevel.DISK_ONLY)
     println(result.count())
     println(result.collect().mkString(","))
+
 
   }
 
@@ -112,8 +121,9 @@ object AppSpark {
 
   // test using GroupByKey
   private def testUsingGroupByKey(sc: SparkContext): Unit = {
+    val input = sc.textFile("//usr//local//spark//readme.md")
 
-    val input = sc.textFile("c://spark//readme.md")
+//    val input = sc.textFile("c://spark//readme.md")
     // Split it up into words.
     val words = input.flatMap(line => line.split(" "))
     val groupWords = words.groupBy(x => x).collect()
@@ -130,8 +140,9 @@ object AppSpark {
 
   // test join RDD
   private def testJoins(sc: SparkContext): Unit = {
+    val input = sc.textFile("//usr//local//spark//readme.md")
 
-    val input = sc.textFile("c://spark//readme.md")
+//    val input = sc.textFile("c://spark//readme.md")
     // Split it up into words.
     val words = input.flatMap(line => line.split(" "))
 
@@ -172,7 +183,8 @@ object AppSpark {
 
   // test compute averga
   private def testAverage(sparkContext: SparkContext): Unit = {
-    val lines = sparkContext.textFile("c://spark//readme.md")
+    val lines = sparkContext.textFile("//usr//local//spark//readme.md")
+//    val lines = sparkContext.textFile("c://spark//readme.md")
     val dddd = lines.zipWithIndex().map(item => item._2.toDouble)
     val mean = dddd.sum() / dddd.count()
     println(mean)
@@ -180,4 +192,54 @@ object AppSpark {
     //var rangePart = new RangePartitioner(10,)
   }
 
+  private def saveSequenceFile(sc:SparkContext):Unit= {
+    val data = sc.parallelize(List(("key1",1),("key2",2),("key3",3)))
+    data.saveAsSequenceFile("/tmp/seq-output2")
+
+
+
+
+
+
+
+
+    //    "/user/hadoop/input"
+    val data2 = sc.sequenceFile("/tmp/seq-output2",classOf[org.apache.hadoop.io.Text],classOf[IntWritable]).map{case(x,y)=>(x.toString,y.get())}
+    val result = data2.collect()
+    println(result.length)
+
+
+
+  }
+
+  private def loadcsvFile(sc:SparkContext):Unit= {
+
+    val input = sc.textFile("/usr/local/spark/data/mllib/sample_tree_data.csv")
+    val data = input.map(line => line.split(",").map(elem => elem.trim))
+    //    val result = input.flatMap { case (_, txt) =>
+    //      val reader = new CSVReader(new StringReader(txt));
+    //      reader.readAll().map(x => Person(x(0), x(1)))
+    //    }
+
+    val sqlContext = new SQLContext(sc);
+    val df = sqlContext.read
+      .format("com.databricks.spark.csv")
+      .option("header", "false") // Use first line of all files as header
+      .load("/usr/local/spark/data/mllib/sample_tree_data.csv")
+
+    df.show()
+
+    df.select("_c0").show()
+    print(df)
+  }
+
+
+
+//  JavaPairRDD<String, String> csvData = sc.wholeTextFiles(inputFile);
+//  JavaRDD<String[]> keyedRDD = csvData.flatMap(new ParseLine());
+
 }
+
+
+
+
