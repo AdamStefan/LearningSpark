@@ -15,7 +15,6 @@ class ExactPartitioner[V](
     val k = key.asInstanceOf[Int]
     //  `k` is assumed to go continuously from 0 to elements-1.
     //  return k * partitions / elements
-
     return k
   }
 
